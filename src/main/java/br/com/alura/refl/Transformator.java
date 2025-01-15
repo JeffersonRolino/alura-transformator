@@ -10,16 +10,23 @@ public class Transformator {
         Class<?> source = input.getClass();
         Class<?> target = Class.forName(source + "DTO");
 
+        O targetClass = (O)target.getDeclaredConstructor().newInstance();
+
         Field[] sourceFields = source.getDeclaredFields();
         Field[] targetFields = target.getDeclaredFields();
 
         Arrays.stream(sourceFields).forEach(sourceField -> {
             Arrays.stream(targetFields).forEach(targetField ->{
                 validate(sourceField, targetField);
+                try {
+                    targetField.set(targetClass, sourceField.get(input));
+                } catch (IllegalAccessException e) {
+                    throw new RuntimeException(e);
+                }
             });
         });
 
-        return (O)target.getDeclaredConstructor().newInstance();
+        return targetClass;
     }
 
     private void validate(Field sourceField, Field targetField){
